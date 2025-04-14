@@ -30,7 +30,6 @@ SPEECH_SPEED = 1.5
 # Memory storage
 user_memories = ""
 
-# Initialize Coqui TTS
 tts_model = TTS(model_name="tts_models/en/ljspeech/tacotron2-DDC", progress_bar=False, gpu=False)
 
 async def record_audio():
