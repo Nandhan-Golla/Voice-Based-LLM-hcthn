@@ -14,31 +14,25 @@ from scipy.io import wavfile
 import numpy as np
 import sounddevice as sd
 
-# Initialize Groq client
 #groq_client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
 groq_client = AsyncGroq(api_key="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")
-
-# Initialize pygame for audio playback
 pygame.mixer.init()
 
-# Voice activity detection parameters
 SAMPLE_RATE = 16000
-FRAME_DURATION = 0.03  # 30ms frames
-SPEECH_THRESHOLD = 0.6  # Simplified VAD threshold
+FRAME_DURATION = 0.03
+SPEECH_THRESHOLD = 0.6
 
 async def record_audio():
-    """Record audio until silence is detected."""
     print("Listening...")
     recording = []
     silence_frames = 0
-    max_silence_frames = int(1.0 / FRAME_DURATION)  # 1 second of silence
+    max_silence_frames = int(1.0 / FRAME_DURATION) 
     
     def callback(indata, frames, time, status):
         nonlocal recording, silence_frames
         if status:
             print(status)
         recording.append(indata.copy())
-        # Simple energy-based VAD
         energy = np.sum(indata ** 2) / len(indata)
         if energy < SPEECH_THRESHOLD:
             silence_frames += 1
@@ -72,7 +66,7 @@ async def generate_response(text):
     """Generate a response using Groq's LLM."""
     try:
         response = await groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",  # Updated model
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": "You are JARVIS, a helpful AI assistant inspired by Iron Man. Provide clear, concise, and accurate responses with a touch of wit."},
                 {"role": "user", "content": text}
@@ -150,7 +144,6 @@ async def process_command(text):
     if "joke" in text:
         return "Why did the computer go to art school? Because it wanted to learn how to draw a better 'byte'!"
     
-    # Fallback to LLM for general queries
     return await generate_response(text)
 
 async def main():
@@ -160,7 +153,6 @@ async def main():
     
     while True:
         try:
-            # Record and transcribe audio
             audio_data = await record_audio()
             if audio_data is None or len(audio_data) == 0:
                 continue
@@ -171,11 +163,9 @@ async def main():
                 
             print(f"You said: {transcription}")
             
-            # Process the command
             response = await process_command(transcription)
             print(f"JARVIS: {response}")
-            
-            # Convert response to speech
+    
             text_to_speech(response)
             
         except Exception as e:
@@ -183,7 +173,7 @@ async def main():
             print(error_msg)
             text_to_speech(error_msg)
         
-        await asyncio.sleep(0.1)  # Prevent tight loop
+        await asyncio.sleep(0.1)
 
 if platform.system() == "Emscripten":
     asyncio.ensure_future(main())

@@ -5,8 +5,6 @@ import json
 
 app = Flask(__name__)
 socketio = SocketIO(app)
-
-# HTML template with ElevenLabs widget
 html_template = """
 <!DOCTYPE html>
 <html lang="en">
@@ -58,7 +56,6 @@ def home():
 def handle_voice_command(data):
     command = data.get('text', '')
     print(f"Received command: {command}")
-    # Mock AI pipeline (replace with real model-building logic)
     response = {"status": "Processing", "message": f"Building model based on: {command}"}
     socketio.emit('ai_response', response)
 
