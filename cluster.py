@@ -18,7 +18,8 @@ import json
 import random
 from typing import List, Dict
 
-groq_client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
+#groq_client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
+groq_client = AsyncGroq(api_key="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")
 
 pygame.mixer.init()
 
