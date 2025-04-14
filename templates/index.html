@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sam - Your AI Best Friend</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a202c, #2d3748);
+            color: #e2e8f0;
+            font-family: 'Arial', sans-serif;
+        }
+        .chat-container {
+            max-height: 500px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .user-message {
+            background: #4a90e2;
+            text-align: right;
+        }
+        .sam-message {
+            background: #2d3748;
+        }
+        .neon-button {
+            background: transparent;
+            border: 2px solid #00ffcc;
+            color: #00ffcc;
+            transition: all 0.3s;
+        }
+        .neon-button:hover {
+            background: #00ffcc;
+            color: #1a202c;
+            box-shadow: 0 0 10px #00ffcc;
+        }
+        .recording {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center">
+    <div class="container mx-auto p-4 max-w-2xl">
+        <h1 class="text-4xl font-bold text-center mb-6 text-white">Sam - Your AI Best Friend</h1>
+        
+        <!-- Chat Area -->
+        <div class="chat-container mb-4">
+            <div id="chat" class="space-y-4"></div>
+        </div>
+        
+        <!-- Input Section -->
+        <div class="flex space-x-2 mb-4">
+            <input id="text-input" type="text" class="flex-grow p-2 bg-gray-800 text-white rounded focus:outline-none" placeholder="Type or talk to Sam...">
+            <button id="send-btn" class="neon-button px-4 py-2 rounded">Send</button>
+            <button id="record-btn" class="neon-button px-4 py-2 rounded">🎙️ Record</button>
+        </div>
+        
+        <!-- Memory Upload -->
+        <div class="bg-gray-800 p-4 rounded">
+            <h2 class="text-xl font-semibold mb-2">Share Your Memories</h2>
+            <input id="memory-file" type="file" accept=".txt" class="mb-2 text-white">
+            <button id="upload-btn" class="neon-button px-4 py-2 rounded w-full">Upload Memories</button>
+        </div>
+    </div>
+
+    <script>
+        const chat = document.getElementById('chat');
+        const textInput = document.getElementById('text-input');
+        const sendBtn = document.getElementById('send-btn');
+        const recordBtn = document.getElementById('record-btn');
+        const memoryFile = document.getElementById('memory-file');
+        const uploadBtn = document.getElementById('upload-btn');
+        let isRecording = false;
+        let mediaRecorder;
+
+        function addMessage(text, isUser) {
+            const div = document.createElement('div');
+            div.className = `message ${isUser ? 'user-message' : 'sam-message'}`;
+            div.textContent = text;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        async function sendText() {
+            const text = textInput.value.trim();
+            if (!text) return;
+            addMessage(text, true);
+            textInput.value = '';
+
+            const formData = new FormData();
+            formData.append('text', text);
+            const response = await fetch('/api/process', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.response) {
+                addMessage(data.response, false);
+            } else {
+                addMessage('Something went wrong, try again!', false);
+            }
+        }
+
+        async function handleRecording() {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    const chunks = [];
+
+                    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                    mediaRecorder.onstop = async () => {
+                        const blob = new Blob(chunks, { type: 'audio/wav' });
+                        const formData = new FormData();
+                        formData.append('audio', blob, 'recording.wav');
+
+                        recordBtn.classList.remove('recording');
+                        recordBtn.textContent = '🎙️ Record';
+
+                        const response = await fetch('/api/process', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await response.json();
+                        if (data.transcription) {
+                            addMessage(data.transcription, true);
+                            addMessage(data.response, false);
+                        } else {
+                            addMessage('Couldn’t hear you, try again!', false);
+                        }
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.classList.add('recording');
+                    recordBtn.textContent = 'Stop';
+                } catch (e) {
+                    addMessage('Mic access denied, type instead!', false);
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+            }
+        }
+
+        async function uploadMemories() {
+            const file = memoryFile.files[0];
+            if (!file) {
+                addMessage('Pick a .txt file first!', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            const response = await fetch('/api/upload_memories', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            addMessage(data.response || data.error, false);
+        }
+
+        sendBtn.addEventListener('click', sendText);
+        textInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter') sendText();
+        });
+        recordBtn.addEventListener('click', handleRecording);
+        uploadBtn.addEventListener('click', uploadMemories);
+    </script>
+</body>
+</html>
