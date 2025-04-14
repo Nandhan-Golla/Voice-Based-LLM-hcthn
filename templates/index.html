@@ -5,73 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sam - Your AI Best Friend</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #1a202c, #2d3748);
-            color: #e2e8f0;
-            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0d1b2a, #1b263b);
+            color: #e0e1dd;
+            font-family: 'Roboto', sans-serif;
+            overflow-x: hidden;
+        }
+        .hero {
+            background: url('https://source.unsplash.com/random/1920x1080?cosmos') no-repeat center;
+            background-size: cover;
+            background-attachment: fixed;
         }
         .chat-container {
-            max-height: 500px;
+            max-height: 400px;
             overflow-y: auto;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
             padding: 20px;
+            backdrop-filter: blur(10px);
         }
         .message {
             margin: 10px 0;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
+            transition: all 0.3s ease;
         }
         .user-message {
-            background: #4a90e2;
-            text-align: right;
+            background: #415a77;
+            margin-left: 20%;
         }
         .sam-message {
-            background: #2d3748;
+            background: #1b263b;
+            margin-right: 20%;
+        }
+        .timestamp {
+            font-size: 0.75rem;
+            color: #a0aec0;
         }
         .neon-button {
             background: transparent;
-            border: 2px solid #00ffcc;
-            color: #00ffcc;
-            transition: all 0.3s;
+            border: 2px solid #00d4ff;
+            color: #00d4ff;
+            transition: all 0.3s ease;
         }
         .neon-button:hover {
-            background: #00ffcc;
-            color: #1a202c;
-            box-shadow: 0 0 10px #00ffcc;
+            background: #00d4ff;
+            color: #0d1b2a;
+            box-shadow: 0 0 15px #00d4ff;
         }
         .recording {
             animation: pulse 1s infinite;
+            box-shadow: 0 0 20px #ff0066;
         }
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.1); }
             100% { transform: scale(1); }
         }
+        .typing::after {
+            content: '...';
+            animation: dots 1s infinite;
+        }
+        @keyframes dots {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+        }
+        .dragover {
+            border: 2px dashed #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: twinkle 10s infinite;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.6; }
+            50% { opacity: 0.3; }
+            100% { opacity: 0.6; }
+        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center">
-    <div class="container mx-auto p-4 max-w-2xl">
-        <h1 class="text-4xl font-bold text-center mb-6 text-white">Sam - Your AI Best Friend</h1>
-        
+<body class="min-h-screen relative">
+    <div class="stars"></div>
+    
+    <!-- Hero Section -->
+    <section class="hero py-16 text-center">
+        <h1 class="text-5xl font-bold text-white mb-4" style="font-family: 'Orbitron', sans-serif;">
+            Meet Sam
+        </h1>
+        <p class="text-xl max-w-2xl mx-auto text-gray-200">
+            Your AI best friend—wicked smart, always ready to geek out on AI, robotics, or just vibe. Let’s make big things happen!
+        </p>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-6 max-w-4xl">
         <!-- Chat Area -->
-        <div class="chat-container mb-4">
+        <div class="chat-container mb-6 shadow-lg">
             <div id="chat" class="space-y-4"></div>
+            <div id="typing" class="hidden text-gray-400 typing">Sam is thinking</div>
         </div>
-        
+
         <!-- Input Section -->
-        <div class="flex space-x-2 mb-4">
-            <input id="text-input" type="text" class="flex-grow p-2 bg-gray-800 text-white rounded focus:outline-none" placeholder="Type or talk to Sam...">
-            <button id="send-btn" class="neon-button px-4 py-2 rounded">Send</button>
-            <button id="record-btn" class="neon-button px-4 py-2 rounded">🎙️ Record</button>
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
+            <input id="text-input" type="text" class="flex-grow p-3 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="Chat with Sam...">
+            <button id="send-btn" class="neon-button px-6 py-3 rounded-lg">Send</button>
+            <button id="record-btn" class="neon-button px-6 py-3 rounded-lg">🎙️</button>
         </div>
-        
+
         <!-- Memory Upload -->
-        <div class="bg-gray-800 p-4 rounded">
-            <h2 class="text-xl font-semibold mb-2">Share Your Memories</h2>
-            <input id="memory-file" type="file" accept=".txt" class="mb-2 text-white">
-            <button id="upload-btn" class="neon-button px-4 py-2 rounded w-full">Upload Memories</button>
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-semibold mb-4 text-cyan-400" style="font-family: 'Orbitron', sans-serif;">
+                Share Your Story
+            </h2>
+            <div id="drop-zone" class="border-2 border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-cyan-500 transition">
+                <p>Drag & drop a .txt file or click to upload</p>
+                <input id="memory-file" type="file" accept=".txt" class="hidden">
+            </div>
+            <button id="upload-btn" class="neon-button w-full mt-4 px-6 py-3 rounded-lg">Upload Memories</button>
         </div>
     </div>
 
@@ -82,13 +144,16 @@
         const recordBtn = document.getElementById('record-btn');
         const memoryFile = document.getElementById('memory-file');
         const uploadBtn = document.getElementById('upload-btn');
+        const dropZone = document.getElementById('drop-zone');
+        const typingIndicator = document.getElementById('typing');
         let isRecording = false;
         let mediaRecorder;
 
         function addMessage(text, isUser) {
             const div = document.createElement('div');
             div.className = `message ${isUser ? 'user-message' : 'sam-message'}`;
-            div.textContent = text;
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            div.innerHTML = `<span>${text}</span><div class="timestamp">${time}</div>`;
             chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
         }
@@ -98,6 +163,7 @@
             if (!text) return;
             addMessage(text, true);
             textInput.value = '';
+            typingIndicator.classList.remove('hidden');
 
             const formData = new FormData();
             formData.append('text', text);
@@ -105,11 +171,12 @@
                 method: 'POST',
                 body: formData
             });
+            typingIndicator.classList.add('hidden');
             const data = await response.json();
             if (data.response) {
                 addMessage(data.response, false);
             } else {
-                addMessage('Something went wrong, try again!', false);
+                addMessage('Something broke, let’s try again!', false);
             }
         }
 
@@ -117,7 +184,7 @@
             if (!isRecording) {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                     const chunks = [];
 
                     mediaRecorder.ondataavailable = e => chunks.push(e.data);
@@ -127,27 +194,29 @@
                         formData.append('audio', blob, 'recording.wav');
 
                         recordBtn.classList.remove('recording');
-                        recordBtn.textContent = '🎙️ Record';
+                        recordBtn.innerHTML = '🎙️';
 
+                        typingIndicator.classList.remove('hidden');
                         const response = await fetch('/api/process', {
                             method: 'POST',
                             body: formData
                         });
+                        typingIndicator.classList.add('hidden');
                         const data = await response.json();
                         if (data.transcription) {
                             addMessage(data.transcription, true);
                             addMessage(data.response, false);
                         } else {
-                            addMessage('Couldn’t hear you, try again!', false);
+                            addMessage('Couldn’t hear you clearly, try again!', false);
                         }
                     };
 
                     mediaRecorder.start();
                     isRecording = true;
                     recordBtn.classList.add('recording');
-                    recordBtn.textContent = 'Stop';
+                    recordBtn.innerHTML = '■';
                 } catch (e) {
-                    addMessage('Mic access denied, type instead!', false);
+                    addMessage('Mic’s not working, type it out instead?', false);
                 }
             } else {
                 mediaRecorder.stop();
@@ -158,19 +227,36 @@
         async function uploadMemories() {
             const file = memoryFile.files[0];
             if (!file) {
-                addMessage('Pick a .txt file first!', false);
+                addMessage('Yo, pick a .txt file first!', false);
                 return;
             }
 
             const formData = new FormData();
             formData.append('file', file);
+            typingIndicator.classList.remove('hidden');
             const response = await fetch('/api/upload_memories', {
                 method: 'POST',
                 body: formData
             });
+            typingIndicator.classList.add('hidden');
             const data = await response.json();
             addMessage(data.response || data.error, false);
         }
+
+        // Drag and drop
+        dropZone.addEventListener('click', () => memoryFile.click());
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            memoryFile.files = e.dataTransfer.files;
+            uploadMemories();
+        });
+        memoryFile.addEventListener('change', uploadMemories);
 
         sendBtn.addEventListener('click', sendText);
         textInput.addEventListener('keypress', e => {
@@ -178,6 +264,9 @@
         });
         recordBtn.addEventListener('click', handleRecording);
         uploadBtn.addEventListener('click', uploadMemories);
+
+        // Initial greeting
+        addMessage('Hey, it’s Sam! Ready to geek out or chase some big ideas?', false);
     </script>
 </body>
 </html>

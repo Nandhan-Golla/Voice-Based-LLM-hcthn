@@ -10,47 +10,39 @@ from cluster import (
 )
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024  # 1MB limit
+app.config['UPLOAD_FOLDER'] = 'Uploads'
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
 ALLOWED_EXTENSIONS = {'txt'}
 
-# Ensure upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-# Store conversation context
 conversation_context = []
 
 def allowed_file(filename):
-    """Check if file extension is allowed."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
 def index():
-    """Render the main interface."""
     return render_template('index.html')
 
 @app.route('/api/process', methods=['POST'])
 def process():
-    """Handle text or audio input synchronously."""
     global conversation_context
     try:
         if 'audio' in request.files:
             audio_file = request.files['audio']
             if audio_file:
-                # Save audio temporarily
                 filename = secure_filename(audio_file.filename)
                 temp_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 audio_file.save(temp_path)
                 
-                # Read and transcribe
                 sample_rate, audio_data = wavfile.read(temp_path)
                 if len(audio_data.shape) > 1:
-                    audio_data = audio_data[:, 0]  # Mono
+                    audio_data = audio_data[:, 0]
                 audio_data = audio_data.astype(np.float32) / 32768.0
                 transcription = asyncio.run(transcribe_audio(audio_data))
                 os.unlink(temp_path)
                 
-                if transcription and not transcription.startswith("Whoops"):
+                if transcription and not transcription.startswith(("Whoops", "Transcription", "Audio")):
                     response, conversation_context = asyncio.run(process_command(transcription, conversation_context))
                     return jsonify({'response': response, 'transcription': transcription})
                 return jsonify({'error': 'Couldn’t transcribe audio'})
@@ -68,7 +60,6 @@ def process():
 
 @app.route('/api/upload_memories', methods=['POST'])
 def upload_memories():
-    """Handle memory file upload."""
     try:
         if 'file' not in request.files:
             return jsonify({'error': 'No file uploaded'})
